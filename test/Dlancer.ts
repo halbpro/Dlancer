@@ -150,10 +150,13 @@ describe("Dlancer", function () {
       await transaction.wait();
     })
     
-    it("Should cancel offer", async () => {
+    it("Should cancel offer", async () => {      
+      const balanceBefore = await ethers.provider.getBalance(client.address);
       await dlancer.connect(client).cancelOffer(1);
+      const balanceAfter = await ethers.provider.getBalance(client.address);
       const offer = await dlancer.offers(1);
-      expect(offer.valid).to.equal(false);
+      expect(offer.valid).to.equal(false);      
+      expect(balanceAfter).to.be.greaterThan(balanceBefore);
     });
     
     it("Other account cannot cancel", async () => {

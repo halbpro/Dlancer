@@ -58,6 +58,8 @@ contract OfferBase {
 
     function cancelOffer (uint256 _offerId) external onlyCancelable(_offerId){
         offers[_offerId].valid = false;
+        (bool success, ) = msg.sender.call{value: offers[_offerId].budget}("");
+        require(success);
     }
     
 }
