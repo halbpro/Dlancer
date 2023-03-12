@@ -1,80 +1,43 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
+import "./WorkerBase.sol";
 
-contract Dlancer {  
-    uint256 offersIndex = 1;
+contract Dlancer is WorkerBase {  
+    address public owner;
 
-    enum OfferCategory {
-        marketing,
-        sales,
-        development,
-        accounting
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller must be an owner");
+        _;
     }
-
-    enum JobStatus {
-        accepted,
-        finished,
-        failed
-    }
-
-    struct Offer {
-        string title;
-        string description;
-        uint256 budget;
-        OfferCategory category;
-        uint256 expirationTime;
-        address client;
-        bool valid;
-        bool inExecution;
-    }
-    struct Job {
-        uint256 id;
-        uint256 offerId;
-        JobStatus status;
-    }
-
-    //client
-    //mapping(address => Offer[]) public offers;
-    mapping(uint256 => Offer) public offers;
-    mapping(address => Job) public jobs;
-
-    event NewOffer(string indexed title, OfferCategory indexed category);
-    event OfferAccepted(address indexed executor, string indexed title);
 
     constructor () {
-
+        owner = msg.sender;
     }
 
-    //*******vec klasov, nardimo worker contract, more bit approvan
+    function approveWorker(address _workerAddress, SkillLevel _skill) external onlyOwner() {
+        registrations[_workerAddress].status = RegistrationStatus.approved;
+        workers[_workerAddress] = Worker(
+            registrations[_workerAddress].name, 
+            registrations[_workerAddress].email, 
+            registrations[_workerAddress].image,
+            0,
+            0,
+            new uint256[](0),
+            _skill,
+            false);
 
-    function publishOffer(
-        string memory _title,
-        string memory _description,
-        uint256 _budget,
-        OfferCategory _category,
-        uint256 _expirationTime
-    ) external payable {
-        require(msg.value  >= _budget, "Must pay in advance");
-        offers[offersIndex++] = Offer(_title, _description, _budget, _category, _expirationTime, msg.sender, true, false);
-        emit NewOffer(_title, _category);
+        emit WorkerApproved(_workerAddress, registrations[_workerAddress].name);
     }
 
-    function cancelOffer (uint256 _offerIf) external {
-        Offer memory offer = offers[_offerIf];     
-        require(offer.client == msg.sender, "Only task owner can cancel offer");   
-        require(offer.inExecution == false, "Cannot cancel offer in execution");
-        offers[_offerIf].valid = false;
+    function rejectWorker(address _workerAddress, string memory _reason) public onlyOwner() {
+        registrations[_workerAddress].status = RegistrationStatus.denied;
+
+        emit WorkerRejected(_workerAddress, _reason);
     }
 
-    function acceptOffer(uint256 _offerIf) external {
-        Offer memory offer = offers[_offerIf];     
-        require(offer.valid == true, "Offer is no longer valid");
-        require(offer.client != msg.sender, "Cannot accept your own offers");
-        //check expiration date and merge in one modifier
-        offers[_offerIf].inExecution = true;
-        emit OfferAccepted(msg.sender, offer.title);
+    function banWorker(address _workerAddress) external onlyOwner() {
+        rejectWorker(_workerAddress, "Reported as dishonest dude");
+        workers[_workerAddress].badActor = true;
     }
 }
