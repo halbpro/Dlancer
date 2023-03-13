@@ -1,19 +1,52 @@
-import { ethers } from "hardhat";
+const hre = require("hardhat")
+const fs = require("fs")
+const path = require("path")
+const fse = require('fs-extra');
+
+const copyAbiToSrc = (source) => {
+  
+  try {  
+    const directory = source ? source : path.join(__dirname, "../artifacts/contracts/");
+
+    fs.readdir(
+      directory,
+      { 
+        withFileTypes: true 
+      }, (err: string, files: any[]) =>  {
+        if (err) {
+            return console.log('Unable to scan directory: ' + err);
+        } 
+        files.forEach((file) => {
+          const newPath = path.join(directory, file.name);
+          if(file.isDirectory()) {
+            copyAbiToSrc(newPath);
+          }
+          else {          
+            const contract = fs.readFileSync(newPath, "utf8");
+            const json = JSON.parse(contract);
+            const abi = json.abi;
+            if(abi) {
+              const destDir = path.join(__dirname, `../src/abis/${file.name}`);
+              fse.copySync(newPath, destDir, { overwrite: true })
+              console.log(`copying file: ${file.name}`);
+            }
+          }
+        });
+    });
+
+  } catch (e) {
+    console.log(`e`, e)
+  }
+}
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const[deployer] = await hre.ethers.getSigners();
+  const Dlancer = await hre.ethers.getContractFactory("Dlancer");
+  const dlancer = await Dlancer.deploy();
+  await dlancer.deployed();
 
-  const lockedAmount = ethers.utils.parseEther("0.001");
-
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(lockedAmount)}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  console.log(`Deployed dlancer Contract at: ${dlancer.address}\n`);
+  copyAbiToSrc("");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
