@@ -27,7 +27,8 @@ const copyAbiToSrc = (source) => {
             const abi = json.abi;
             if(abi) {
               const destDir = path.join(__dirname, `../src/abis/${file.name}`);
-              fse.copySync(newPath, destDir, { overwrite: true })
+              fs.writeFileSync(destDir, JSON.stringify(abi));
+              //fse.copySync(newPath, destDir, { overwrite: true })
               console.log(`copying file: ${file.name}`);
             }
           }
