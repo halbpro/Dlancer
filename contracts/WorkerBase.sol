@@ -68,7 +68,7 @@ contract WorkerBase is JobBase {
     function acceptOffer(uint256 _offerId) external onlyValidWorkers() onlyAvailableOffers(_offerId) {
         offers[_offerId].inExecution = true;
         //when offer is accepted, new job is created
-        jobs[jobsIndex] = Job(_offerId, JobStatus.accepted, msg.sender);
+        jobs[jobsIndex++] = Job(_offerId, JobStatus.accepted, msg.sender);
         workers[msg.sender].tasksAccepted++;
 
         emit OfferAccepted(msg.sender, offers[_offerId].title);
