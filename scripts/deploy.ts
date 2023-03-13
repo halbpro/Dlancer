@@ -1,7 +1,8 @@
-const hre = require("hardhat")
-const fs = require("fs")
-const path = require("path")
+const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 const fse = require('fs-extra');
+const {offers} = require("../src/offers.json");
 
 const copyAbiToSrc = (source) => {
   
@@ -36,18 +37,39 @@ const copyAbiToSrc = (source) => {
     });
 
   } catch (e) {
-    console.log(`e`, e)
+    console.log("e", e)
   }
 }
 
 async function main() {
-  const[deployer] = await hre.ethers.getSigners();
+  
+  const tokens = (n) => {
+    return ethers.utils.parseUnits(n.toString(), 'ether')
+  }
+
+  const[deployer, client] = await hre.ethers.getSigners();
   const Dlancer = await hre.ethers.getContractFactory("Dlancer");
   const dlancer = await Dlancer.deploy();
   await dlancer.deployed();
 
   console.log(`Deployed dlancer Contract at: ${dlancer.address}\n`);
   copyAbiToSrc("");
+
+  //preload some data to chain
+  offers.forEach(async offer => {
+    
+    const castedBudget = tokens(offer.budget);
+    const transaction = await dlancer.connect(client).publishOffer(
+      offer.title,
+      offer.description,
+      castedBudget,
+      offer.category,
+      offer.expirationTime, { value: castedBudget }
+    );
+    //await transaction.wait();
+
+    console.log(`preloaded: ${offer.title}`);
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere

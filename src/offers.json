@@ -1,0 +1,25 @@
+{
+    "offers": [
+        {
+            "title": "Easy website",
+            "description" : "I just need one pager",
+            "budget": "1",
+            "category": 2,
+            "expirationTime" : 1678930670
+        },
+        {
+            "title": "Need marketing expert",
+            "description" : "I need expirienced marketer who will send my company to the moon",
+            "budget": "2",
+            "category": 0,
+            "expirationTime" : 1688930670
+        },
+        {
+            "title": "Need marketing newbie",
+            "description" : "I need someone who will help",
+            "budget": "1.5",
+            "category": 0,
+            "expirationTime" : 1688930670
+        }
+    ]
+}

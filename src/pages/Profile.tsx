@@ -4,7 +4,7 @@ export const Profile = (props: any) => {
     const [owner, setOwner] = useState<string>("");
 
     const loadOwner =async () => {
-        const owner = await props.dlancerContract?.owner();  
+        const owner = await props.dlancer?.owner();  
         setOwner(owner);
     }
     loadOwner();
