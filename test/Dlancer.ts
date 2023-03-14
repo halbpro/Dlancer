@@ -47,6 +47,11 @@ describe("Dlancer", function () {
       expect(offer.valid).to.equal(true);
     });
 
+    it("Should show all offers", async() => {
+      const offers = await dlancer.getOffers();
+      expect(offers.length).to.equal(1);
+    })
+
     it("Cannot publish without sending funds", async() => {
       await expect( dlancer.connect(client).publishOffer(
         TITLE,
@@ -188,6 +193,11 @@ describe("Dlancer", function () {
     it("Should create a job", async () => {      
       const job = await dlancer.jobs(1);
       expect(job.workerAddress).to.equal(executor.address);
+    })
+
+    it("Should all jobs", async () => {      
+      const job = await dlancer.getJobs();
+      expect(job.length).to.equal(1);
     })
 
     it("Should emit offer accepted", async () => {   

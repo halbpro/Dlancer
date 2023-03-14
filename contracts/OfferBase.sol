@@ -61,5 +61,13 @@ contract OfferBase {
         (bool success, ) = msg.sender.call{value: offers[_offerId].budget}("");
         require(success);
     }
-    
+
+    function getOffers() external view returns(Offer[] memory ) {
+        Offer[] memory offersArray = new Offer[](offersIndex - 1);
+        for(uint256 i = 0; i < offersIndex - 1; i++) {
+            offersArray[i] = offers[i+1];
+        }
+
+        return offersArray;
+    }    
 }

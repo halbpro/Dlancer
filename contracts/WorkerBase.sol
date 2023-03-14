@@ -90,4 +90,13 @@ contract WorkerBase is JobBase {
         (bool success, ) = jobs[_jobId].workerAddress.call{value: offers[jobs[_jobId].offerId].budget}("");
         require(success);
     }
+
+    function getJobs() external view returns(Job[] memory ) {
+        Job[] memory jobsArray = new Job[](jobsIndex - 1);
+        for(uint256 i = 0; i < jobsIndex - 1; i++) {
+            jobsArray[i] = jobs[i+1];
+        }
+
+        return jobsArray;
+    }   
 }
