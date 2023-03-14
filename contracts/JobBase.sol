@@ -2,8 +2,8 @@
 pragma solidity ^0.8.9;
 import "./OfferBase.sol";
 
-contract JobBase is OfferBase {  
-    uint256 jobsIndex = 1;  
+contract JobBase is OfferBase {
+    uint256 jobsIndex = 1;
 
     enum JobStatus {
         accepted,
@@ -21,5 +21,4 @@ contract JobBase is OfferBase {
     event JobCompleted(string indexed title);
 
     mapping(uint256 => Job) public jobs;
-
 }

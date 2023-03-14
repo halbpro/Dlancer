@@ -18,7 +18,7 @@ export const Offers = () => {
     
     return (<div>
         {
-            offers?.map((offer, index) =>(
+            offers?.filter(x => x.valid).map((offer, index) =>(
                 <Offer offer={{...offer, id: index + 1}} key={index}/>
             ))
         }

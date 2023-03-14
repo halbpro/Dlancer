@@ -36,36 +36,58 @@ contract WorkerBase is JobBase {
 
     mapping(address => WorkerRegistration) public registrations;
     mapping(address => Worker) public workers;
-    //mapping(uint256 => address) public jobWorker;
 
     event WorkerApproved(address indexed worker, string indexed name);
     event WorkerRejected(address indexed worker, string indexed reason);
     event NewRegistration(string indexed name, string indexed email);
 
     modifier onlyValidWorkers() {
-        require(workers[msg.sender].badActor == false, "worker must have integrity");
+        require(
+            workers[msg.sender].badActor == false,
+            "worker must have integrity"
+        );
         _;
     }
 
     modifier onlyJobWorker(uint256 _jobId) {
-        require(jobs[_jobId].workerAddress == msg.sender, "Sender is not job worker");
+        require(
+            jobs[_jobId].workerAddress == msg.sender,
+            "Sender is not job worker"
+        );
         _;
     }
-    
-    modifier onlyValidRegistration(string calldata _name, string calldata _email) {
-        require(registrations[msg.sender].status == RegistrationStatus.none, "Registration already submitted");
+
+    modifier onlyValidRegistration(
+        string calldata _name,
+        string calldata _email
+    ) {
+        require(
+            registrations[msg.sender].status == RegistrationStatus.none,
+            "Registration already submitted"
+        );
         require(bytes(_name).length != 0, "Name must not be empty");
         require(bytes(_email).length != 0, "Email must not be empty");
         _;
     }
 
-    function register(string calldata _name, string calldata _email, string calldata _image) onlyValidRegistration(_name, _email) external {
-        registrations[msg.sender] = WorkerRegistration(_name, _email, _image, RegistrationStatus.registrationPending);
+    function register(
+        string calldata _name,
+        string calldata _email,
+        string calldata _image
+    ) external onlyValidRegistration(_name, _email) {
+        registrations[msg.sender] = WorkerRegistration(
+            _name,
+            _email,
+            _image,
+            RegistrationStatus.registrationPending
+        );
 
         emit NewRegistration(_name, _email);
     }
 
-    function acceptOffer(uint256 _offerId) external onlyValidWorkers() onlyAvailableOffers(_offerId) {
+    function acceptOffer(
+        uint256 _offerId
+    ) external onlyValidWorkers onlyAvailableOffers(_offerId) {
         offers[_offerId].inExecution = true;
         //when offer is accepted, new job is created
         jobs[jobsIndex++] = Job(_offerId, JobStatus.accepted, msg.sender);
@@ -85,18 +107,26 @@ contract WorkerBase is JobBase {
         offers[jobs[_jobId].offerId].inExecution = false;
     }
 
-    function confirmJobCompleted(uint256 _jobId) external{
-        require(msg.sender == offers[jobs[_jobId].offerId].client, "Only client can confirm job done");
-        (bool success, ) = jobs[_jobId].workerAddress.call{value: offers[jobs[_jobId].offerId].budget}("");
+    function confirmJobCompleted(uint256 _jobId) external {
+        require(jobs[_jobId].status == JobStatus.done, "Job status must be done");
+        require(
+            msg.sender == offers[jobs[_jobId].offerId].client,
+            "Only client can confirm job done"
+        );
+        (bool success, ) = jobs[_jobId].workerAddress.call{
+            value: offers[jobs[_jobId].offerId].budget
+        }("");
         require(success);
+        jobs[_jobId].status = JobStatus.doneConfirmed;
+        offers[jobs[_jobId].offerId].valid = false;
     }
 
-    function getJobs() external view returns(Job[] memory ) {
+    function getJobs() external view returns (Job[] memory) {
         Job[] memory jobsArray = new Job[](jobsIndex - 1);
-        for(uint256 i = 0; i < jobsIndex - 1; i++) {
-            jobsArray[i] = jobs[i+1];
+        for (uint256 i = 0; i < jobsIndex - 1; i++) {
+            jobsArray[i] = jobs[i + 1];
         }
 
         return jobsArray;
-    }   
+    }
 }

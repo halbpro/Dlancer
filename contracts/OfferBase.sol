@@ -27,18 +27,21 @@ contract OfferBase {
     event OfferAccepted(address indexed executor, string indexed title);
 
     mapping(uint256 => Offer) public offers;
-    
+
     modifier onlyAvailableOffers(uint256 _offerId) {
-        Offer memory offer = offers[_offerId];     
+        Offer memory offer = offers[_offerId];
         require(offer.valid == true, "Offer is no longer valid");
         require(offer.client != msg.sender, "Cannot accept your own offers");
-        require(offer.inExecution == false, "Cannot accept offers in execution");
+        require(
+            offer.inExecution == false,
+            "Cannot accept offers in execution"
+        );
         _;
     }
 
     modifier onlyCancelable(uint256 _offerId) {
-        Offer memory offer = offers[_offerId];     
-        require(offer.client == msg.sender, "Only task owner can cancel offer");   
+        Offer memory offer = offers[_offerId];
+        require(offer.client == msg.sender, "Only task owner can cancel offer");
         require(offer.inExecution == false, "Cannot cancel offer in execution");
         _;
     }
@@ -50,24 +53,34 @@ contract OfferBase {
         OfferCategory _category,
         uint256 _expirationTime
     ) external payable {
-        require(msg.value  >= _budget, "Must deposit budget to contact");
-        offers[offersIndex++] = Offer(_title, _description, _budget, _category, _expirationTime, msg.sender, true, false, 0);
+        require(msg.value >= _budget, "Must deposit budget to contact");
+        offers[offersIndex++] = Offer(
+            _title,
+            _description,
+            _budget,
+            _category,
+            _expirationTime,
+            msg.sender,
+            true,
+            false,
+            0
+        );
 
         emit NewOffer(_title, _category);
     }
 
-    function cancelOffer (uint256 _offerId) external onlyCancelable(_offerId){
+    function cancelOffer(uint256 _offerId) external onlyCancelable(_offerId) {
         offers[_offerId].valid = false;
         (bool success, ) = msg.sender.call{value: offers[_offerId].budget}("");
         require(success);
     }
 
-    function getOffers() external view returns(Offer[] memory ) {
+    function getOffers() external view returns (Offer[] memory) {
         Offer[] memory offersArray = new Offer[](offersIndex - 1);
-        for(uint256 i = 0; i < offersIndex - 1; i++) {
-            offersArray[i] = offers[i+1];
+        for (uint256 i = 0; i < offersIndex - 1; i++) {
+            offersArray[i] = offers[i + 1];
         }
 
         return offersArray;
-    }    
+    }
 }
